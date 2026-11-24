@@ -1,1 +1,228 @@
 
+<?php
+session_start();
+?>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎧 FocusFlow — Study Music & Tracker</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Animated Bubble Background -->
+<div class="bubbles" id="bubbles"></div>
+<div class="aurora"></div>
+
+<!-- Loading Screen -->
+<div id="loader">
+    <div class="loader-content">
+        <div class="pulse-ring"></div>
+        <h2>FocusFlow</h2>
+        <p>Loading your focus zone...</p>
+    </div>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg glass-nav fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#"><i class="fa-solid fa-headphones"></i> FocusFlow</a>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-glass" id="themeToggle"><i class="fa-solid fa-moon"></i></button>
+            <button class="btn btn-glass" id="fullscreenBtn"><i class="fa-solid fa-expand"></i></button>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Container -->
+<div class="container-fluid main-wrap">
+    <div class="row g-4">
+
+        <!-- LEFT: Music Player -->
+        <div class="col-lg-4">
+            <div class="glass-card">
+                <h4 class="card-title"><i class="fa-solid fa-music"></i> Study Music</h4>
+
+                <div class="music-visualizer">
+                    <div class="vinyl" id="vinyl">
+                        <i class="fa-solid fa-compact-disc"></i>
+                    </div>
+                    <div class="bars" id="bars">
+                        <span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+
+                <div class="track-info">
+                    <h5 id="trackTitle">Lo-Fi Focus Beat</h5>
+                    <p id="trackArtist">Ambient Study Mix</p>
+                </div>
+
+                <select class="form-select mb-3" id="trackSelector">
+                    <option value="lofi">🎧 Lo-Fi Focus Beat</option>
+                    <option value="rain">🌧️ Rain & Thunder</option>
+                    <option value="piano">🎹 Soft Piano</option>
+                    <option value="nature">🌿 Nature Sounds</option>
+                    <option value="white">📻 White Noise</option>
+                    <option value="custom">📁 Your Audio File</option>
+                </select>
+
+                <input type="file" accept="audio/*" id="audioUpload" class="form-control mb-3 d-none">
+
+                <div class="player-controls">
+                    <button class="ctrl-btn" id="prevBtn"><i class="fa-solid fa-backward-step"></i></button>
+                    <button class="ctrl-btn play" id="playBtn"><i class="fa-solid fa-play"></i></button>
+                    <button class="ctrl-btn" id="nextBtn"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
+
+                <div class="volume-wrap mt-3">
+                    <i class="fa-solid fa-volume-low"></i>
+                    <input type="range" id="volume" min="0" max="100" value="60">
+                    <i class="fa-solid fa-volume-high"></i>
+                </div>
+
+                <audio id="audioPlayer" loop></audio>
+            </div>
+        </div>
+
+        <!-- CENTER: Pomodoro Timer -->
+        <div class="col-lg-4">
+            <div class="glass-card text-center">
+                <h4 class="card-title"><i class="fa-solid fa-stopwatch"></i> Focus Timer</h4>
+
+                <div class="timer-ring">
+                    <svg width="220" height="220">
+                        <circle class="ring-bg" cx="110" cy="110" r="100"></circle>
+                        <circle class="ring-progress" id="ringProgress" cx="110" cy="110" r="100"></circle>
+                    </svg>
+                    <div class="timer-text">
+                        <span id="timeDisplay">25:00</span>
+                        <small id="timerMode">Focus</small>
+                    </div>
+                </div>
+
+                <div class="mode-tabs">
+                    <button class="mode-btn active" data-mode="focus" data-min="25">Focus</button>
+                    <button class="mode-btn" data-mode="short" data-min="5">Short Break</button>
+                    <button class="mode-btn" data-mode="long" data-min="15">Long Break</button>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <button class="btn btn-primary-glow" id="startTimer"><i class="fa-solid fa-play"></i> Start</button>
+                    <button class="btn btn-glass" id="resetTimer"><i class="fa-solid fa-rotate-left"></i></button>
+                </div>
+
+                <div class="mt-3 subject-input">
+                    <input type="text" class="form-control" id="subjectInput" placeholder="📚 What are you studying?">
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Stats & Water -->
+        <div class="col-lg-4">
+            <div class="glass-card">
+                <h4 class="card-title"><i class="fa-solid fa-chart-simple"></i> Today's Progress</h4>
+
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon purple"><i class="fa-solid fa-clock"></i></div>
+                        <div>
+                            <h3 id="statFocus">0<small>m</small></h3>
+                            <p>Focus Time</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon green"><i class="fa-solid fa-mug-hot"></i></div>
+                        <div>
+                            <h3 id="statBreak">0<small>m</small></h3>
+                            <p>Break Time</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon blue"><i class="fa-solid fa-glass-water"></i></div>
+                        <div>
+                            <h3 id="statWater">0</h3>
+                            <p>Glasses</p>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon orange"><i class="fa-solid fa-fire"></i></div>
+                        <div>
+                            <h3 id="statStreak">0</h3>
+                            <p>Pomodoros</p>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <h5 class="mb-3"><i class="fa-solid fa-droplet"></i> Water Tracker</h5>
+                <div class="water-tracker" id="waterGlasses"></div>
+                <button class="btn btn-water w-100 mt-2" id="addWater">
+                    <i class="fa-solid fa-plus"></i> Add Glass of Water
+                </button>
+
+                <div class="progress mt-3" style="height:8px">
+                    <div class="progress-bar water-fill" id="waterBar" style="width:0%"></div>
+                </div>
+                <small class="text-muted d-block text-center mt-1" id="waterGoalText">0 / 8 glasses</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom: Task List -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="glass-card">
+                <h4 class="card-title"><i class="fa-solid fa-list-check"></i> Study Tasks</h4>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="taskInput" placeholder="Add a task...">
+                    <button class="btn btn-primary-glow" id="addTask"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <ul class="task-list" id="taskList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session History -->
+    <div class="row mt-4 mb-5">
+        <div class="col-12">
+            <div class="glass-card">
+                <h4 class="card-title"><i class="fa-solid fa-history"></i> Recent Sessions</h4>
+                <div class="table-responsive">
+                    <table class="table table-hover session-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th><th>Mode</th><th>Duration</th><th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyBody">
+                            <tr><td colspan="4" class="text-center text-muted">No sessions yet. Start focusing! 🚀</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast glass-toast" role="alert">
+        <div class="toast-header">
+            <i class="fa-solid fa-bell me-2"></i>
+            <strong class="me-auto">FocusFlow</strong>
+            <button class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMsg"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
