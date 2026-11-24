@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Study Focus — Command Prompt</title>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- Animated particle canvas -->
+<canvas id="particles"></canvas>
+
+<!-- HEADER -->
+<header class="header glass">
+  <div class="brand">
+    <span class="logo">◈</span>
+    <span class="brand-name">FOCUS<span class="accent">.AI</span></span>
+  </div>
+
+  <div class="header-center">
+    <div class="streak" title="Study streak">
+      <span class="flame">🔥</span>
+      <span id="streakDays">0</span> day streak
+    </div>
+
+    <div class="xp-wrap">
+      <div class="xp-label">LVL <span id="lvlNum">1</span> · XP</div>
+      <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
+      <div class="xp-text"><span id="xpNow">0</span>/<span id="xpMax">100</span></div>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button id="muteBtn" class="icon-btn" title="Toggle sound">🔊</button>
+    <div class="avatar">🎓</div>
+  </div>
+</header>
+
+<!-- MAIN GRID -->
+<main class="grid">
+
+  <!-- LEFT PANEL -->
+  <section class="panel glass left-panel">
+    <h3 class="panel-title">🎯 Goals</h3>
+    <div class="goal-item">
+      <div class="goal-row"><span>Daily</span><span id="dailyTxt">0/120 min</span></div>
+      <div class="pbar"><div id="dailyBar" class="pfill"></div></div>
+    </div>
+    <div class="goal-item">
+      <div class="goal-row"><span>Weekly</span><span id="weeklyTxt">0/600 min</span></div>
+      <div class="pbar"><div id="weeklyBar" class="pfill"></div></div>
+    </div>
+    <div class="goal-item">
+      <div class="goal-row"><span>Focus Score</span><span id="focusTxt">0%</span></div>
+      <div class="pbar"><div id="focusBar" class="pfill"></div></div>
+    </div>
+
+    <h3 class="panel-title mt-3">🏆 Badges</h3>
+    <div id="badges" class="badges"></div>
+  </section>
+
+  <!-- CENTER HERO -->
+  <section class="panel center-panel">
+    <div class="timer-wrap">
+      <svg class="ring" viewBox="0 0 260 260">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00f0ff"/>
+            <stop offset="50%" stop-color="#b14dff"/>
+            <stop offset="100%" stop-color="#ff2e88"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-bg" cx="130" cy="130" r="110"/>
+        <circle id="ringProgress" class="ring-fg" cx="130" cy="130" r="110"/>
+      </svg>
+      <div class="timer-center">
+        <div id="timeDisplay" class="time">25:00</div>
+        <div id="phaseLabel" class="phase">READY</div>
+        <div id="sessionCount" class="session">Session 0</div>
+      </div>
+    </div>
+
+    <div class="bubbles" id="bubbles"></div>
+
+    <div class="ai-terminal glass" id="aiTerminal">
+      <div class="term-head">🤖 AI Coach</div>
+      <div id="aiOutput" class="term-body">
+        <div class="term-line">> Welcome! Type <b>/help</b> to see commands.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT PANEL -->
+  <section class="panel glass right-panel">
+    <h3 class="panel-title">📈 7-Day Focus</h3>
+    <canvas id="lineChart" height="90"></canvas>
+
+    <h3 class="panel-title mt-2">📚 Subjects</h3>
+    <canvas id="barChart" height="90"></canvas>
+
+    <h3 class="panel-title mt-2">⏱ Time Split</h3>
+    <canvas id="doughnutChart" height="90"></canvas>
+
+    <h3 class="panel-title mt-2">🎖 Focus Quality</h3>
+    <canvas id="radarChart" height="90"></canvas>
+  </section>
+</main>
+
+<!-- COMMAND PROMPT -->
+<footer class="prompt-bar glass">
+  <span class="prompt-symbol">›</span>
+  <input id="cmdInput" type="text" autocomplete="off" spellcheck="false"
+         placeholder="Type a command… /start /stop /ai how to focus? /stats /help" />
+  <span class="hint">Ctrl+K</span>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+<script src="js/sound.js"></script>
+<script src="js/animations.js"></script>
+<script src="js/timer.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
