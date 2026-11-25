@@ -1,32 +1,28 @@
 /* ============================================================
-   FOCUSFLOW v3 — Deep Edition
+   FOCUSFLOW MINIMAL — Clock + Sticky YouTube
    ============================================================ */
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 /* ---------- STATE ---------- */
-const S = {
-    focusMinutes: 0, breakMinutes: 0, waterGlasses: 0, pomodoros: 0,
-    tasks: [], history: [], waterGoal: 8, theme: 'dark'
-};
+const S = { theme: 'dark', ytMuted: false, ytMinimized: true };
 function loadState() {
     try {
-        const raw = localStorage.getItem('focusflow_v3');
+        const raw = localStorage.getItem('focusflow_min');
         if (raw) Object.assign(S, JSON.parse(raw));
     } catch(e) {}
 }
-function saveState() { localStorage.setItem('focusflow_v3', JSON.stringify(S)); }
+function saveState() { localStorage.setItem('focusflow_min', JSON.stringify(S)); }
 
 /* ============================================================
-   NEBULA PARTICLE CANVAS
+   NEBULA CANVAS
    ============================================================ */
 (function nebula() {
     const canvas = document.getElementById('nebula');
     const ctx = canvas.getContext('2d');
     let W, H, particles = [], mouse = { x: -9999, y: -9999 };
-    const MAX_P = 90;
-
+    const MAX_P = 80;
     function resize() {
         W = canvas.width = window.innerWidth * devicePixelRatio;
         H = canvas.height = window.innerHeight * devicePixelRatio;
@@ -35,12 +31,10 @@ function saveState() { localStorage.setItem('focusflow_v3', JSON.stringify(S)); 
     }
     resize();
     window.addEventListener('resize', resize);
-
     window.addEventListener('mousemove', e => {
         mouse.x = e.clientX * devicePixelRatio;
         mouse.y = e.clientY * devicePixelRatio;
     });
-
     class Particle {
         constructor() { this.reset(true); }
         reset(initial) {
@@ -57,10 +51,7 @@ function saveState() { localStorage.setItem('focusflow_v3', JSON.stringify(S)); 
         update() {
             this.x += this.speedX;
             this.y += this.speedY;
-
-            // gentle mouse parallax
-            const dx = this.x - mouse.x;
-            const dy = this.y - mouse.y;
+            const dx = this.x - mouse.x, dy = this.y - mouse.y;
             const d2 = dx * dx + dy * dy;
             const maxD = (180 * devicePixelRatio) ** 2;
             if (d2 < maxD) {
@@ -68,7 +59,6 @@ function saveState() { localStorage.setItem('focusflow_v3', JSON.stringify(S)); 
                 this.x += (dx / Math.sqrt(d2 || 1)) * force;
                 this.y += (dy / Math.sqrt(d2 || 1)) * force;
             }
-
             this.phase += this.pulseSpeed;
             if (this.y < -20 || this.x < -20 || this.x > W + 20) this.reset(false);
         }
@@ -83,9 +73,7 @@ function saveState() { localStorage.setItem('focusflow_v3', JSON.stringify(S)); 
             ctx.shadowBlur = 0;
         }
     }
-
     for (let i = 0; i < MAX_P; i++) particles.push(new Particle());
-
     function loop() {
         ctx.clearRect(0, 0, W, H);
         particles.forEach(p => { p.update(); p.draw(); });
@@ -117,7 +105,7 @@ function spawnBubbles() {
    TOAST
    ============================================================ */
 function toast(msg, type = 'info') {
-    const icons = { info: '✨', success: '✅', warn: '⚠️', water: '💧', focus: '🎯', music: '🎵' };
+    const icons = { info: '✨', success: '✅', warn: '⚠️', focus: '🎯', music: '🎵' };
     const el = document.createElement('div');
     el.className = 'toast-msg';
     el.innerHTML = `<span>${icons[type] || '✨'}</span><span>${msg}</span>`;
@@ -163,12 +151,12 @@ function toggleFocusMode() {
     } else if (!on && document.fullscreenElement) {
         document.exitFullscreen().catch(() => {});
     }
-    toast(on ? 'Focus mode ON — pure concentration' : 'Focus mode OFF', 'focus');
+    toast(on ? 'Focus mode ON' : 'Focus mode OFF', 'focus');
 }
 $('#focusModeBtn').addEventListener('click', toggleFocusMode);
 
 /* ============================================================
-   TIMER + CLOCK
+   TIMER
    ============================================================ */
 let interval = null;
 let totalSeconds = 25 * 60;
@@ -179,7 +167,6 @@ let currentPreset = 25;
 const ringFill = $('#ringFill');
 const ringSecond = $('#ringSecond');
 const ringTip = $('#ringTip');
-const timeDisplay = $('#timeDisplay');
 const timeMM = $('.t-mm');
 const timeSS = $('.t-ss');
 const timeSub = $('#timeSub');
@@ -193,7 +180,6 @@ const CIRC_MAIN = 2 * Math.PI * 168;
 const CIRC_SEC = 2 * Math.PI * 186;
 const TIP_RADIUS = 168;
 
-/* build tick marks */
 function buildTicks() {
     const g = $('#ticks');
     const cx = 200, cy = 200, rOuter = 190, rInner = 182;
@@ -216,21 +202,16 @@ function renderTime() {
     const s = (remaining % 60).toString().padStart(2, '0');
     timeMM.textContent = m;
     timeSS.textContent = s;
-
-    // Human readable sub
     const mins = Math.floor(remaining / 60);
     const secs = remaining % 60;
     timeSub.textContent = `${mins} min · ${secs} sec`;
 
-    // main progress (remaining fraction → shrinking ring)
     const elapsedFrac = 1 - remaining / totalSeconds;
     ringFill.style.strokeDashoffset = CIRC_MAIN * elapsedFrac;
 
-    // second hand — completes a full circle every 60 seconds
     const secFrac = (remaining % 60) / 60;
     ringSecond.style.strokeDashoffset = CIRC_SEC * (1 - secFrac);
 
-    // rotate tip dot along main progress
     const tipAngle = -90 + elapsedFrac * 360;
     const tipRad = tipAngle * Math.PI / 180;
     const cx = 200 + Math.cos(tipRad) * TIP_RADIUS;
@@ -238,7 +219,6 @@ function renderTime() {
     ringTip.setAttribute('cx', cx);
     ringTip.setAttribute('cy', cy);
 
-    // progress line + pct
     const pct = Math.round(elapsedFrac * 100);
     progressLine.style.width = pct + '%';
     progressPct.textContent = pct + '%';
@@ -288,10 +268,6 @@ function resetTimer() {
 function completeSession() {
     const mins = Math.round(totalSeconds / 60);
     if (mode === 'focus') {
-        S.focusMinutes += mins;
-        S.pomodoros++;
-        const subject = $('#subjectInput').value.trim() || 'Focus Session';
-        addHistory(subject, 'Focus', mins);
         toast(`${mins} min focus complete! Great work 🎯`, 'focus');
         beep();
         setTimeout(() => {
@@ -304,8 +280,6 @@ function completeSession() {
             $$('.preset').forEach(p => p.classList.remove('active'));
         }, 800);
     } else {
-        S.breakMinutes += mins;
-        addHistory('Break', 'Break', mins);
         toast('Break over. Ready to focus again? 🚀', 'success');
         beep();
         setTimeout(() => {
@@ -315,9 +289,6 @@ function completeSession() {
             renderTime();
         }, 800);
     }
-    saveState();
-    updateStats();
-    renderHistory();
     resetTimer();
 }
 
@@ -339,10 +310,7 @@ function beep() {
     } catch(e) {}
 }
 
-startBtn.addEventListener('click', () => {
-    if (interval) pauseTick();
-    else startTick();
-});
+startBtn.addEventListener('click', () => { if (interval) pauseTick(); else startTick(); });
 $('#resetTimer').addEventListener('click', () => { resetTimer(); toast('Timer reset', 'info'); });
 $('#skipTimer').addEventListener('click', () => {
     remaining = 1;
@@ -388,260 +356,164 @@ $('#customApply').addEventListener('click', () => {
 });
 
 /* ============================================================
-   MUSIC
+   STICKY YOUTUBE PLAYER
    ============================================================ */
-let ctx = null, ambientNodes = [];
-const audio = $('#audioPlayer');
+const ytPlayer = $('#ytPlayer');
+const ytFrame = $('#ytFrame');
+const ytOverlay = $('#ytOverlay');
+const ytTitle = $('#ytTitle');
+const ytSub = $('#ytSub');
+const ytPlayPause = $('#ytPlayPause');
+const ytVolume = $('#ytVolume');
+const ytExpand = $('#ytExpand');
+const ytClose = $('#ytClose');
 
-function stopAmbient() {
-    ambientNodes.forEach(n => { try { n.stop && n.stop(); n.disconnect && n.disconnect(); } catch(e){} });
-    ambientNodes = [];
-}
-function noiseBuffer() {
-    const size = 2 * ctx.sampleRate;
-    const buf = ctx.createBuffer(1, size, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < size; i++) d[i] = Math.random() * 2 - 1;
-    return buf;
-}
-function startAmbient(type) {
-    stopAmbient();
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === 'suspended') ctx.resume();
+let ytApi = null;         // YT.Player instance
+let ytCurrentId = 'jfKfPfyJRdk';
+let ytCurrentName = 'Lo-Fi Study Beats';
+let ytIsPlaying = false;
+let ytIsMuted = false;
+let ytLoaded = false;
 
-    if (type === 'white' || type === 'brown' || type === 'rain') {
-        const src = ctx.createBufferSource();
-        src.buffer = noiseBuffer();
-        src.loop = true;
-        let node = src;
-        if (type === 'rain') {
-            const f = ctx.createBiquadFilter();
-            f.type = 'lowpass'; f.frequency.value = 1200;
-            src.connect(f); node = f;
-        } else if (type === 'brown') {
-            const f = ctx.createBiquadFilter();
-            f.type = 'lowpass'; f.frequency.value = 500;
-            src.connect(f); node = f;
-        }
-        const gain = ctx.createGain();
-        gain.gain.value = 0.08;
-        node.connect(gain).connect(ctx.destination);
-        src.start();
-        ambientNodes.push(src, gain);
-    } else if (type === 'lofi' || type === 'piano') {
-        const freqs = type === 'piano'
-            ? [261.63, 329.63, 392.00, 523.25]
-            : [174.61, 220.00, 261.63, 329.63];
-        freqs.forEach((f) => {
-            const osc = ctx.createOscillator();
-            osc.type = type === 'piano' ? 'sine' : 'triangle';
-            osc.frequency.value = f * (1 + (Math.random()-0.5) * 0.003);
-            const g = ctx.createGain();
-            g.gain.value = 0.025;
-            const lfo = ctx.createOscillator();
-            const lfoG = ctx.createGain();
-            lfo.frequency.value = 0.1 + Math.random() * 0.15;
-            lfoG.gain.value = 0.01;
-            lfo.connect(lfoG).connect(g.gain);
-            osc.connect(g).connect(ctx.destination);
-            osc.start(); lfo.start();
-            ambientNodes.push(osc, g, lfo, lfoG);
-        });
-    }
-    const titles = {
-        lofi: ['Lo-Fi Focus', 'Ambient Stream'],
-        rain: ['Rain & Thunder', 'Nature Ambience'],
-        piano: ['Soft Piano', 'Gentle Keys'],
-        white: ['White Noise', 'Focus Stream'],
-        brown: ['Brown Noise', 'Deep Focus']
+/* Load YT IFrame API */
+function loadYTAPI() {
+    if (window.YT && window.YT.Player) { initYTPlayer(); return; }
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.onerror = () => {
+        toast('YouTube API blocked — check connection', 'warn');
     };
-    if (titles[type]) {
-        $('#trackTitle').textContent = titles[type][0];
-        $('#trackArtist').textContent = titles[type][1];
-    }
+    document.head.appendChild(tag);
+    window.onYouTubeIframeAPIReady = initYTPlayer;
 }
 
-const orb = $('#orb');
-const musicLive = $('#musicLive');
-orb.addEventListener('click', () => {
-    const playing = orb.classList.toggle('playing');
-    musicLive.classList.toggle('on', playing);
-    if (playing) startAmbient($('#trackSelector').value !== 'custom' ? $('#trackSelector').value : 'lofi');
-    else stopAmbient();
-});
-$('#trackSelector').addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (val === 'custom') { $('#audioUpload').click(); return; }
-    if (orb.classList.contains('playing')) startAmbient(val);
-    else {
-        orb.classList.add('playing');
-        musicLive.classList.add('on');
-        startAmbient(val);
-    }
-});
-$('#audioUpload').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    audio.src = URL.createObjectURL(file);
-    $('#trackTitle').textContent = file.name.replace(/\.[^.]+$/, '');
-    $('#trackArtist').textContent = 'Your Audio';
-    stopAmbient();
-    audio.play();
-    orb.classList.add('playing');
-    musicLive.classList.add('on');
-});
-$('#volume').addEventListener('input', (e) => {
-    const v = e.target.value / 100;
-    audio.volume = v;
-    ambientNodes.forEach(n => {
-        if (n.gain) try { n.gain.value = (n.gain.value > 0 ? v * 0.08 : 0.08); } catch(e){}
+function initYTPlayer() {
+    if (ytApi) return;
+    ytApi = new YT.Player('ytFrame', {
+        videoId: ytCurrentId,
+        playerVars: {
+            autoplay: 0,
+            controls: 1,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            origin: window.location.origin
+        },
+        events: {
+            onReady: (e) => {
+                ytLoaded = true;
+                ytApi.setVolume(60);
+                ytOverlay.classList.add('hide');
+                // Auto-play muted for browser policy
+                ytApi.mute();
+                ytApi.playVideo();
+                setTimeout(() => {
+                    ytApi.unMute();
+                    ytApi.setVolume(60);
+                }, 300);
+            },
+            onStateChange: (e) => {
+                if (e.data === YT.PlayerState.PLAYING) {
+                    ytIsPlaying = true;
+                    ytPlayPause.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                    ytSub.textContent = 'Now playing';
+                } else if (e.data === YT.PlayerState.PAUSED) {
+                    ytIsPlaying = false;
+                    ytPlayPause.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    ytSub.textContent = 'Paused';
+                } else if (e.data === YT.PlayerState.ENDED) {
+                    ytIsPlaying = false;
+                    ytPlayPause.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    ytSub.textContent = 'Ended';
+                } else if (e.data === YT.PlayerState.BUFFERING) {
+                    ytSub.textContent = 'Buffering…';
+                }
+            },
+            onError: () => {
+                toast('Video unavailable in your region', 'warn');
+            }
+        }
     });
+}
+
+/* Overlay click → load & play */
+ytOverlay.addEventListener('click', () => {
+    ytOverlay.classList.add('hide');
+    loadYTAPI();
+    // Expand on load
+    ytPlayer.classList.remove('minimized');
+    S.ytMinimized = false;
+    saveState();
+    updateExpandIcon();
 });
 
-/* ============================================================
-   WATER
-   ============================================================ */
-function renderWater() {
-    const wrap = $('#waterRow');
-    wrap.innerHTML = '';
-    for (let i = 0; i < S.waterGoal; i++) {
-        const d = document.createElement('div');
-        d.className = 'water-dot' + (i < S.waterGlasses ? ' filled' : '');
-        wrap.appendChild(d);
-    }
-    updateStats();
-}
-$('#addWater').addEventListener('click', () => {
-    if (S.waterGlasses >= S.waterGoal) {
-        S.waterGlasses = 0;
-        toast('Water reset — new day, new goals 💧', 'water');
+/* Play / pause */
+ytPlayPause.addEventListener('click', () => {
+    if (!ytApi) { loadYTAPI(); return; }
+    if (ytIsPlaying) {
+        ytApi.pauseVideo();
     } else {
-        S.waterGlasses++;
-        toast(`${S.waterGlasses}/${S.waterGoal} glasses — stay hydrated!`, 'water');
+        ytApi.playVideo();
     }
-    saveState();
-    renderWater();
 });
 
-/* ============================================================
-   TASKS
-   ============================================================ */
-function renderTasks() {
-    const list = $('#taskList');
-    const badge = $('#taskBadge');
-    list.innerHTML = '';
-    const doneCount = S.tasks.filter(t => t.done).length;
-    badge.textContent = `${doneCount}/${S.tasks.length}`;
-    if (S.tasks.length === 0) {
-        list.innerHTML = '<li style="justify-content:center;color:var(--text-faint);border-style:dashed;">No tasks yet — add one above ✨</li>';
-        return;
+/* Mute / unmute */
+ytVolume.addEventListener('click', () => {
+    if (!ytApi) { loadYTAPI(); return; }
+    if (ytIsMuted) {
+        ytApi.unMute();
+        ytVolume.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+        ytIsMuted = false;
+    } else {
+        ytApi.mute();
+        ytVolume.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+        ytIsMuted = true;
     }
-    S.tasks.forEach((t, i) => {
-        const li = document.createElement('li');
-        if (t.done) li.classList.add('done');
-        li.innerHTML = `
-            <input type="checkbox" ${t.done ? 'checked' : ''} data-i="${i}">
-            <span class="task-text">${escapeHtml(t.text)}</span>
-            <button class="task-del" data-i="${i}"><i class="fa-solid fa-xmark"></i></button>
-        `;
-        list.appendChild(li);
-    });
-    $$('#taskList input[type=checkbox]').forEach(cb => {
-        cb.addEventListener('change', e => {
-            S.tasks[+e.target.dataset.i].done = e.target.checked;
-            saveState(); renderTasks();
-        });
-    });
-    $$('#taskList .task-del').forEach(btn => {
-        btn.addEventListener('click', e => {
-            S.tasks.splice(+e.currentTarget.dataset.i, 1);
-            saveState(); renderTasks();
-        });
-    });
-}
-function addTask() {
-    const inp = $('#taskInput');
-    const v = inp.value.trim();
-    if (!v) return;
-    S.tasks.push({ text: v, done: false });
-    inp.value = '';
-    saveState(); renderTasks();
-    toast('Task added ✨', 'success');
-}
-$('#addTask').addEventListener('click', addTask);
-$('#taskInput').addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
-
-/* ============================================================
-   HISTORY
-   ============================================================ */
-function addHistory(subject, mode, minutes) {
-    S.history.unshift({ subject, mode, minutes, time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
-    if (S.history.length > 30) S.history.pop();
-    saveState();
-}
-function renderHistory() {
-    const body = $('#historyBody');
-    if (S.history.length === 0) {
-        body.innerHTML = '<div class="empty">No sessions yet. Start your first focus block 🚀</div>';
-        return;
-    }
-    body.innerHTML = S.history.slice(0, 8).map(h => `
-        <div class="history-item">
-            <span class="hi-subject">${escapeHtml(h.subject)}</span>
-            <span class="hi-mode ${h.mode === 'Break' ? 'break' : ''}">${h.mode}</span>
-            <span class="hi-dur">${h.minutes}m</span>
-            <span class="hi-time">${h.time}</span>
-        </div>
-    `).join('');
-}
-
-/* ============================================================
-   STATS
-   ============================================================ */
-function updateStats() {
-    $('#statFocus').innerHTML = S.focusMinutes + '<small>m</small>';
-    $('#statBreak').innerHTML = S.breakMinutes + '<small>m</small>';
-    $('#statWater').textContent = S.waterGlasses;
-    $('#statStreak').textContent = S.pomodoros;
-
-    const maxFocus = Math.max(S.focusMinutes, 120);
-    const maxBreak = Math.max(S.breakMinutes, 60);
-    const maxPom = Math.max(S.pomodoros, 10);
-    $('#statFocusBar').style.width = Math.min(100, (S.focusMinutes / maxFocus) * 100) + '%';
-    $('#statBreakBar').style.width = Math.min(100, (S.breakMinutes / maxBreak) * 100) + '%';
-    $('#statWaterBar').style.width = Math.min(100, (S.waterGlasses / S.waterGoal) * 100) + '%';
-    $('#statStreakBar').style.width = Math.min(100, (S.pomodoros / maxPom) * 100) + '%';
-}
-
-/* ============================================================
-   SUBJECT
-   ============================================================ */
-const SUBJECTS = ['Math', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Programming'];
-function renderSubjectTags() {
-    const wrap = $('#subjectTags');
-    wrap.innerHTML = SUBJECTS.map(s => `<span class="subject-tag">${s}</span>`).join('');
-    $$('.subject-tag').forEach(tag => {
-        tag.addEventListener('click', () => {
-            $('#subjectInput').value = tag.textContent;
-            $('#subjectLine').textContent = tag.textContent + ' Session';
-            saveState();
-        });
-    });
-}
-$('#subjectInput').addEventListener('input', e => {
-    $('#subjectLine').textContent = (e.target.value.trim() || 'Deep Work Session');
 });
 
-/* ============================================================
-   UTIL
-   ============================================================ */
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* Expand / minimize */
+function updateExpandIcon() {
+    if (ytPlayer.classList.contains('minimized')) {
+        ytExpand.innerHTML = '<i class="fa-solid fa-up-right-and-down-left-from-center"></i>';
+    } else {
+        ytExpand.innerHTML = '<i class="fa-solid fa-down-left-and-up-right-to-center"></i>';
+    }
 }
+ytExpand.addEventListener('click', () => {
+    ytPlayer.classList.toggle('minimized');
+    S.ytMinimized = ytPlayer.classList.contains('minimized');
+    saveState();
+    updateExpandIcon();
+});
 
-/* ============================================================
-   KEYBOARD
-   ============================================================ */
+/* Close */
+ytClose.addEventListener('click', () => {
+    ytPlayer.classList.add('hidden-player');
+    if (ytApi) { try { ytApi.pauseVideo(); } catch(e){} }
+    setTimeout(() => {
+        toast('Player hidden — press Y to bring back', 'info');
+    }, 300);
+});
+
+/* Preset switching */
+$$('.yt-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        $$('.yt-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        ytCurrentId = chip.dataset.id;
+        ytCurrentName = chip.dataset.name;
+        ytTitle.textContent = ytCurrentName;
+        if (!ytApi) { loadYTAPI(); return; }
+        ytApi.loadVideoById(ytCurrentId);
+        if (ytApi.isMuted && ytApi.isMuted()) {
+            ytApi.unMute();
+            ytApi.setVolume(60);
+        }
+        toast(`Now playing: ${ytCurrentName}`, 'music');
+    });
+});
+
+/* Restore player with Y shortcut */
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         if (e.key === 'Escape') e.target.blur();
@@ -650,9 +522,19 @@ document.addEventListener('keydown', e => {
     if (e.code === 'Space') { e.preventDefault(); startBtn.click(); }
     if (e.key === 'r' || e.key === 'R') $('#resetTimer').click();
     if (e.key === 'f' || e.key === 'F') toggleFocusMode();
-    if (e.key === 'm' || e.key === 'M') orb.click();
-    if (e.key === 'w' || e.key === 'W') $('#addWater').click();
     if (e.key === 't' || e.key === 'T') $('#themeToggle').click();
+    if (e.key === 'y' || e.key === 'Y') {
+        if (ytPlayer.classList.contains('hidden-player')) {
+            ytPlayer.classList.remove('hidden-player');
+            toast('Player restored', 'music');
+        } else {
+            ytPlayer.classList.toggle('minimized');
+            S.ytMinimized = ytPlayer.classList.contains('minimized');
+            saveState();
+            updateExpandIcon();
+        }
+    }
+    if (e.key === 'm' || e.key === 'M') ytPlayPause.click();
     if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) toggleFocusMode();
 });
 
@@ -665,15 +547,16 @@ function init() {
     buildTicks();
     setMode('focus');
     renderTime();
-    renderWater();
-    renderTasks();
-    renderHistory();
-    updateStats();
-    renderSubjectTags();
-    $('#subjectLine').textContent = 'Deep Work Session';
-    $('#customMin').value = 30;
+    updateExpandIcon();
+    // Restore minimized state
+    if (!S.ytMinimized) ytPlayer.classList.remove('minimized');
+    // Restore theme
+    if (S.theme === 'light') {
+        document.body.classList.add('light');
+        $('#themeToggle').innerHTML = '<i class="fa-solid fa-sun"></i>';
+    }
 }
 init();
 
-console.log('%c⚡ FocusFlow v3 — Deep Edition loaded', 'background:linear-gradient(90deg,#7c5cff,#00d4ff,#00ffa3);color:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:14px;');
-console.log('Shortcuts → SPACE:start/pause  R:reset  F:focus-mode  M:music  W:water  T:theme  ESC:exit');
+console.log('%c⚡ FocusFlow Minimal loaded', 'background:linear-gradient(90deg,#7c5cff,#00d4ff,#00ffa3);color:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:14px;');
+console.log('Shortcuts → SPACE:timer  R:reset  F:focus  T:theme  Y:player toggle  M:play/pause  ESC:exit');
