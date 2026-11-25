@@ -4,14 +4,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FocusFlow — Deep Focus Studio</title>
+<title>FocusFlow — Deep Focus Clock</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- ===== DEEP BACKGROUND LAYERS ===== -->
+<!-- ===== DEEP BACKGROUND ===== -->
 <canvas id="nebula"></canvas>
 <div class="aurora aurora-1"></div>
 <div class="aurora aurora-2"></div>
@@ -29,12 +29,12 @@
             <div class="loader-core"></div>
         </div>
         <h1>FocusFlow</h1>
-        <p>Entering deep focus studio…</p>
+        <p>Entering deep focus zone…</p>
         <div class="loader-progress"><span></span></div>
     </div>
 </div>
 
-<!-- ===== TOP BAR ===== -->
+<!-- ===== TOPBAR ===== -->
 <header class="topbar">
     <div class="brand">
         <div class="brand-mark"><i class="fa-solid fa-wave-square"></i></div>
@@ -46,10 +46,8 @@
     </div>
 </header>
 
-<!-- ===== MAIN DASHBOARD ===== -->
+<!-- ===== MAIN CLOCK ===== -->
 <main class="dash" id="dash">
-
-    <!-- ============ HERO CLOCK ============ -->
     <section class="clock-stage" id="clockStage">
         <div class="stage-glow" id="stageGlow"></div>
         <div class="stage-glow secondary" id="stageGlow2"></div>
@@ -74,17 +72,10 @@
                         </feMerge>
                     </filter>
                 </defs>
-
-                <!-- outer ticks -->
                 <g id="ticks" opacity="0.4"></g>
-
-                <!-- track -->
                 <circle class="ring-track" cx="200" cy="200" r="168"/>
-                <!-- main progress -->
                 <circle class="ring-fill" id="ringFill" cx="200" cy="200" r="168" filter="url(#glow)"/>
-                <!-- second hand (thin outer) -->
                 <circle class="ring-second" id="ringSecond" cx="200" cy="200" r="186"/>
-                <!-- glowing dot at tip -->
                 <circle class="ring-tip" id="ringTip" cx="200" cy="32" r="5"/>
             </svg>
 
@@ -98,7 +89,6 @@
                     <div class="progress-line-fill" id="progressLine"></div>
                 </div>
                 <div class="progress-pct" id="progressPct">0%</div>
-                <div class="subject-line" id="subjectLine">Deep Work Session</div>
             </div>
         </div>
 
@@ -138,99 +128,55 @@
             </div>
         </div>
     </section>
-
-    <!-- ============ SIDE PANELS ============ -->
-    <section class="panels" id="panels">
-
-        <div class="panel">
-            <div class="panel-head">
-                <h3><i class="fa-solid fa-headphones"></i> Study Music</h3>
-                <span class="live-dot" id="musicLive"></span>
-            </div>
-            <div class="orb-player">
-                <div class="orb" id="orb">
-                    <div class="orb-core"></div>
-                    <div class="orb-wave"><span></span><span></span><span></span><span></span><span></span></div>
-                </div>
-                <div class="orb-info">
-                    <h4 id="trackTitle">Lo-Fi Focus</h4>
-                    <p id="trackArtist">Ambient Stream</p>
-                </div>
-            </div>
-            <select class="sel" id="trackSelector">
-                <option value="lofi">🎧 Lo-Fi Focus</option>
-                <option value="rain">🌧️ Rain</option>
-                <option value="piano">🎹 Soft Piano</option>
-                <option value="brown">🟤 Brown Noise</option>
-                <option value="white">📻 White Noise</option>
-                <option value="custom">📁 Upload Audio</option>
-            </select>
-            <input type="file" accept="audio/*" id="audioUpload" class="hidden">
-            <div class="vol-row">
-                <i class="fa-solid fa-volume-low"></i>
-                <input type="range" id="volume" min="0" max="100" value="60">
-                <i class="fa-solid fa-volume-high"></i>
-            </div>
-            <audio id="audioPlayer" loop></audio>
-        </div>
-
-        <div class="panel">
-            <div class="panel-head"><h3><i class="fa-solid fa-chart-line"></i> Today</h3></div>
-            <div class="stat-grid">
-                <div class="stat">
-                    <div class="stat-val" id="statFocus">0<small>m</small></div>
-                    <div class="stat-label">Focus</div>
-                    <div class="stat-bar"><span id="statFocusBar"></span></div>
-                </div>
-                <div class="stat">
-                    <div class="stat-val" id="statBreak">0<small>m</small></div>
-                    <div class="stat-label">Break</div>
-                    <div class="stat-bar"><span id="statBreakBar"></span></div>
-                </div>
-                <div class="stat">
-                    <div class="stat-val" id="statWater">0</div>
-                    <div class="stat-label">Water</div>
-                    <div class="stat-bar"><span id="statWaterBar"></span></div>
-                </div>
-                <div class="stat">
-                    <div class="stat-val" id="statStreak">0</div>
-                    <div class="stat-label">Pomodoros</div>
-                    <div class="stat-bar"><span id="statStreakBar"></span></div>
-                </div>
-            </div>
-            <button class="btn-water" id="addWater"><i class="fa-solid fa-droplet"></i> Add Glass of Water</button>
-            <div class="water-row" id="waterRow"></div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-head"><h3><i class="fa-solid fa-book-open"></i> Subject</h3></div>
-            <input type="text" class="text-inp" id="subjectInput" placeholder="What are you studying?" maxlength="40">
-            <div class="subject-tags" id="subjectTags"></div>
-        </div>
-
-    </section>
-
-    <section class="panel wide" id="tasksPanel">
-        <div class="panel-head">
-            <h3><i class="fa-solid fa-list-check"></i> Tasks</h3>
-            <span class="badge" id="taskBadge">0/0</span>
-        </div>
-        <div class="task-input">
-            <input type="text" id="taskInput" placeholder="Add a task and press Enter…">
-            <button id="addTask"><i class="fa-solid fa-plus"></i></button>
-        </div>
-        <ul class="tasks" id="taskList"></ul>
-    </section>
-
-    <section class="panel wide" id="historyPanel">
-        <div class="panel-head"><h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Sessions</h3></div>
-        <div class="history" id="historyBody">
-            <div class="empty">No sessions yet. Start your first focus block 🚀</div>
-        </div>
-    </section>
-
 </main>
 
+<!-- ===== STICKY YOUTUBE PLAYER ===== -->
+<div class="yt-player minimized" id="ytPlayer">
+    <div class="yt-frame-wrap">
+        <div id="ytFrame" class="yt-frame"></div>
+        <div class="yt-overlay" id="ytOverlay">
+            <i class="fa-brands fa-youtube"></i>
+            <span>Click to load player</span>
+        </div>
+    </div>
+
+    <div class="yt-bar">
+        <div class="yt-logo"><i class="fa-brands fa-youtube"></i></div>
+        <div class="yt-meta">
+            <div class="yt-title" id="ytTitle">Lo-Fi Study Beats</div>
+            <div class="yt-sub" id="ytSub">Tap to expand</div>
+        </div>
+        <div class="yt-actions">
+            <button class="yt-btn" id="ytPlayPause" title="Play/Pause (M)"><i class="fa-solid fa-play"></i></button>
+            <button class="yt-btn" id="ytVolume" title="Mute"><i class="fa-solid fa-volume-high"></i></button>
+            <button class="yt-btn" id="ytExpand" title="Expand (Y)"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+            <button class="yt-btn close" id="ytClose" title="Hide"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
+    <div class="yt-presets" id="ytPresets">
+        <button class="yt-chip active" data-id="jfKfPfyJRdk" data-name="Lo-Fi Study Beats">
+            <i class="fa-solid fa-headphones"></i> Lo-Fi
+        </button>
+        <button class="yt-chip" data-id="lTRiuFIWV54" data-name="Deep Focus Music">
+            <i class="fa-solid fa-brain"></i> Deep Focus
+        </button>
+        <button class="yt-chip" data-id="5qap5aO4i9A" data-name="Jazz Cafe Radio">
+            <i class="fa-solid fa-mug-hot"></i> Jazz
+        </button>
+        <button class="yt-chip" data-id="n61ULEU7CO0" data-name="Rain Ambience">
+            <i class="fa-solid fa-cloud-rain"></i> Rain
+        </button>
+        <button class="yt-chip" data-id="DWcJFNfaw9c" data-name="Piano Ambience">
+            <i class="fa-solid fa-music"></i> Piano
+        </button>
+        <button class="yt-chip" data-id="MVPTGNGiI-4" data-name="Classical Study">
+            <i class="fa-solid fa-violin"></i> Classical
+        </button>
+    </div>
+</div>
+
+<!-- ===== TOAST ===== -->
 <div class="toast-stack" id="toastStack"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
